@@ -5,23 +5,21 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js",
-    "build": "babel ./ --out-dir dist/ --ignore ./node_modules,./.babelrc,./package.json,./npm-debug.log --copy-files"
+    "start1": "node index.js",
+    "build1": "babel ./ --out-dir dist/ --ignore ./node_modules,./.babelrc,./package.json,./npm-debug.log --copy-files",
+    "start": "nodemon --exec babel-node index.js",
+    "build": "babel src --out-dir dist",
+    "serve": "node index.js"
   },
   "type": "module",
   "repository": {
-    "type": "git",
-    "url": "git+https://github.com/RajARROW/graphql-auto-cli.git"
+    "type": "git"
   },
   "author": "Raj Matariya",
   "license": "MIT",
   "bin": {
     "graphql-auto-cli": "dist/bin/graphql-auto-cli.js"
   },
-  "bugs": {
-    "url": "https://github.com/RajARROW/graphql-auto-cli/issues"
-  },
-  "homepage": "https://github.com/RajARROW/graphql-auto-cli#readme",
   "dependencies": {
     "@babel/cli": "^7.8.3",
     "commander": "^4.1.0",

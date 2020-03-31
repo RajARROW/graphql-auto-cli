@@ -74,8 +74,7 @@ export const basicQuestions = async (model) => {
 
 export const init = async () => {
   const data = await basicQuestions([]);
-  console.log(data);
-  data.model.forEach((modelData) => {
+  data.forEach((modelData) => {
     let scemas = {};
     modelData.fields.forEach(async (field) => {
       if (field.type === 'object') {
