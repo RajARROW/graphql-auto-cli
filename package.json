@@ -1,41 +1,18 @@
 {
-  "name": "graphql-auto-cli",
+  "name": "cli-tool",
   "version": "1.0.0",
-  "description": "testing",
+  "description": "GraphQL auto generate tool",
   "main": "index.js",
+  "preferGlobal": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start1": "node index.js",
-    "build1": "babel ./ --out-dir dist/ --ignore ./node_modules,./.babelrc,./package.json,./npm-debug.log --copy-files",
-    "start": "nodemon --exec babel-node index.js",
-    "build": "babel src --out-dir dist",
-    "serve": "node index.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "type": "module",
-  "repository": {
-    "type": "git"
-  },
-  "author": "Raj Matariya",
-  "license": "MIT",
   "bin": {
-    "graphql-auto-cli": "dist/bin/graphql-auto-cli.js"
+    "graphql-create": "bin/index.js"
   },
+  "author": "raj.150410116036@gmail.com",
+  "license": "ISC",
   "dependencies": {
-    "@babel/cli": "^7.8.3",
-    "commander": "^4.1.0",
-    "fs-extra": "^8.1.0",
-    "inquirer": "^7.0.3"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.8.3",
-    "@babel/node": "^7.4.5",
-    "@babel/plugin-proposal-object-rest-spread": "^7.8.3",
-    "@babel/plugin-transform-runtime": "^7.8.3",
-    "@babel/preset-env": "^7.8.3",
-    "@babel/runtime": "^7.8.3",
-    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
-    "eslint": "^6.8.0",
-    "eslint-config-google": "^0.14.0",
-    "nodemon": "^2.0.2"
+    "commander": "^5.0.0"
   }
 }
