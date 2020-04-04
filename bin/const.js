@@ -55,7 +55,7 @@ var express = require('express');
 var mongoose = require('mongoose');
 const app = express();
 import { ApolloServer } from 'apollo-server-express';
-import * as schema from '../graphql/schema';
+import * as schema from '../graphql';
 
 //get Mongo URL and DB name from env
 const { mongoURI: dbURL, mongoDBName: dbName } = process.env;
@@ -88,7 +88,7 @@ mongoose
 })
 .catch(err => console.log(err));`;
 
-const schema = `import TYPEDEFS from './types';
+const schema = `import TYPEDEFS from './schema';
 import RESOLVERS from './resolvers';
 export { TYPEDEFS, RESOLVERS };`
 
@@ -115,6 +115,6 @@ fileName: '.babelrc'
 },
 {
   data: schema,
-  fileName: '/schema.js',
-  path: './qraphql'
+  fileName: '/index.js',
+  path: './graphql'
 }];

@@ -24,11 +24,11 @@ generateModels = (data) => {
     data.map(res => {
         const schema = mapModel(res.fields).reduce(((r, c) => Object.assign(r, c)), {});
         basicScema.push({name:res.modelName, data: schema});
-        const schemaData = JSON.stringify(schema, null, 2).replace(/"'([^"']+(?='"))'"/g, '$1');
+        const schemaData = JSON.stringify(schema, null, 2).replace(/"'([^"']+(?='"))'"/g, '$1').replace(/['"]+/g, '').replace(/\\/g, '\'');
         const data = `
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-const ${res.modelName}Schema = new Scema (
+const ${res.modelName}Schema = new Schema (
 ${schemaData}
 )
 module.exports = mongoose.model('${res.modelName}', ${res.modelName}Schema);`
@@ -51,8 +51,8 @@ generateSchema = async (data) => {
         allSchema = allSchema + schema;
         query = query + `\nget${makeFirstLaterCapital(res)}(_id: ID!): ${makeFirstLaterCapital(res)}`
         mutation = mutation + `\ncreate${makeFirstLaterCapital(res)}(${res}Input: ${res}Input): ${makeFirstLaterCapital(res)}`
-        // writeFileWithFolderPath('./qraphql/schema', '/index.js', index);
-        // await writeFileIfExist('./qraphql/schema', '/index.js', index);
+        // writeFileWithFolderPath('./graphql/schema', '/index.js', index);
+        // await writeFileIfExist('./graphql/schema', '/index.js', index);
     });
     const all = `const schema = \` ${allSchema} 
     type Query {
@@ -68,17 +68,21 @@ generateSchema = async (data) => {
     \`
 const TYPEDEFS = gql(schema);
 export default TYPEDEFS;`
-    await writeFileIfExist('./qraphql/schema', '/index.js', indexImport);
-    await writeFileIfExist('./qraphql/schema', '/index.js', all);
+    await writeFileIfExist('./graphql/schema', '/index.js', indexImport);
+    await writeFileIfExist('./graphql/schema', '/index.js', all);
     data.map(res => {
         const v = res.fields.map(res => {
+            if (res.fieldType.includes('_ID')) {
+                return {[res.fieldName]: 'ID'};
+            }
             return {[res.fieldName]: res.fieldType}
         });
-        const schema = v.reduce(((r, c) => Object.assign(r, c)), {});
-        const types = `export const ${res.modelName}Type = \`\ntype ${res.modelName.charAt(0).toUpperCase() + res.modelName.slice(1)} ${JSON.stringify(schema, null, 2)}\`;`;
-        const input = `export const ${res.modelName}Input = \`\ninput ${res.modelName}Input ${JSON.stringify(schema, null, 2)}\`;`
-        writeFileWithFolderPath('./qraphql/schema/query', '/'+res.modelName+'.js', types);
-        writeFileWithFolderPath('./qraphql/schema/mutation', '/'+res.modelName+'.js', input);
+        let schema = v.reduce(((r, c) => Object.assign(r, c)), {});
+        schema = JSON.stringify(schema, null, 2).replace(/['"]+/g, '').replace(/[',]+/g, '');
+        const types = `export const ${res.modelName}Type = \`\ntype ${makeFirstLaterCapital(res.modelName)} ${schema}\`;`;
+        const input = `export const ${res.modelName}Input = \`\ninput ${res.modelName}Input ${schema}\`;`
+        writeFileWithFolderPath('./graphql/schema/query', '/'+res.modelName+'.js', types);
+        writeFileWithFolderPath('./graphql/schema/mutation', '/'+res.modelName+'.js', input);
     });
 }
 
@@ -92,7 +96,7 @@ generateResolver = async (data) => {
     model.map((res) => {
         const indexs = `import ${res} from '../../../models/${res}';`
         indexImport = indexImport+indexs;
-        query = query + `const get${makeFirstLaterCapital(res)} = async (root, {_id}) => {
+        query = query + `export const get${makeFirstLaterCapital(res)} = async (root, {_id}) => {
             return await ${res}.findOne({_id: _id}).catch(err => {
                 throw new Error("User not found");
             });
@@ -106,8 +110,10 @@ generateResolver = async (data) => {
         ${query}`;
         const finalMutationDataToWrite = `${indexImport}
         ${mutation}`;
-        writeFileWithFolderPath('./qraphql/resolvers/query', '/'+res+'.js', finalQueryDataToWrite);
-        writeFileWithFolderPath('./qraphql/resolvers/mutation', '/'+res+'.js', finalMutationDataToWrite);
+        writeFileWithFolderPath('./graphql/resolvers/query', '/'+res+'.js', finalQueryDataToWrite);
+        writeFileWithFolderPath('./graphql/resolvers/mutation', '/'+res+'.js', finalMutationDataToWrite);
+        query = '';
+        mutation = '';
     });
 }
 
@@ -123,8 +129,8 @@ generateResolverIndex = async (data) => {
         indexImport = indexImport+indexs;
         query = Object.assign({ [`get${makeFirstLaterCapital(res)}`]: `get${makeFirstLaterCapital(res)}` }, query);
         mutation = Object.assign({ [`create${makeFirstLaterCapital(res)}`]: `create${makeFirstLaterCapital(res)}` }, mutation);
-        // writeFileWithFolderPath('./qraphql/schema', '/index.js', index);
-        // await writeFileIfExist('./qraphql/schema', '/index.js', index);
+        // writeFileWithFolderPath('./graphql/schema', '/index.js', index);
+        // await writeFileIfExist('./graphql/schema', '/index.js', index);
     });
     query = JSON.stringify(query);
     query = query.replace(/['"]+/g, '');
@@ -139,13 +145,18 @@ generateResolverIndex = async (data) => {
         
     }
     export default RESOLVERS;`;
-    await writeFileIfExist('./qraphql/resolvers', '/index.js', indexImport);
-    await writeFileIfExist('./qraphql/resolvers', '/index.js', all);
+    await writeFileIfExist('./graphql/resolvers', '/index.js', indexImport);
+    await writeFileIfExist('./graphql/resolvers', '/index.js', all);
 }
 
 mapModel = (data) => {
     return data.map(res => {
+        
         if (!res.fieldType.includes('_ID')) {
+            console.log(res.fieldType.includes('_ID'), res.fieldType);
+            if (res.fieldType === 'ID') {
+                return;
+            }
             return {
                 [res.fieldName]: {
                     type: res.fieldType,
@@ -156,7 +167,7 @@ mapModel = (data) => {
             return {
                 [res.fieldName]: [{
                     type: `'Schema.Types.ObjectId'`,
-                    ref: `${res.fieldType.split('_')[0]}`
+                    ref: `"'${res.fieldType.split('_')[0]}'"`
                 }]
             }
         }
